@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hashicorp/terraform/remote"
+	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/cli"
 )
 
@@ -98,5 +100,42 @@ func TestInit_noArgs(t *testing.T) {
 	args := []string{}
 	if code := c.Run(args); code != 1 {
 		t.Fatalf("bad: \n%s", ui.OutputWriter.String())
+	}
+}
+
+func TestInit_remoteState(t *testing.T) {
+	tmp, cwd := testCwd(t)
+	defer fixDir(tmp, cwd)
+
+	s := terraform.NewState()
+	conf, srv := testRemoteState(t, s)
+	defer srv.Close()
+
+	ui := new(cli.MockUi)
+	c := &InitCommand{
+		Meta: Meta{
+			ContextOpts: testCtxConfig(testProvider()),
+			Ui:          ui,
+		},
+	}
+
+	args := []string{
+		"-remote", conf.Name,
+		"-remote-server", conf.Server,
+		testFixturePath("init"),
+		tmp,
+	}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: \n%s", ui.ErrorWriter.String())
+	}
+
+	if _, err := os.Stat(filepath.Join(tmp, "hello.tf")); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	path, _ := remote.HiddenStatePath()
+	_, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("missing state")
 	}
 }
