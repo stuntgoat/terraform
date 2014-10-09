@@ -88,6 +88,12 @@ func init() {
 			}, nil
 		},
 
+		"remote": func() (cli.Command, error) {
+			return &command.RemoteCommand{
+				Meta: meta,
+			}, nil
+		},
+
 		"show": func() (cli.Command, error) {
 			return &command.ShowCommand{
 				Meta: meta,
