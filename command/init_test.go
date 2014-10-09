@@ -105,7 +105,7 @@ func TestInit_noArgs(t *testing.T) {
 
 func TestInit_remoteState(t *testing.T) {
 	tmp, cwd := testCwd(t)
-	defer fixDir(tmp, cwd)
+	defer testFixCwd(t, tmp, cwd)
 
 	s := terraform.NewState()
 	conf, srv := testRemoteState(t, s, 200)
